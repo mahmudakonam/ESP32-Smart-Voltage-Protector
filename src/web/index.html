@@ -32,39 +32,39 @@
         </header>
 
         <main class="dashboard-overview">
-          <section id="systemCard" class="hero-card state-waiting" aria-live="polite">
-            <div class="hero-main">
-              <div class="state-symbol" aria-hidden="true">
-                <span id="stateIcon">···</span>
+          <div class="dashboard-primary">
+            <section id="systemCard" class="hero-card state-waiting" aria-live="polite">
+              <div class="hero-main">
+                <div class="state-symbol" aria-hidden="true">
+                  <span id="stateIcon">···</span>
+                </div>
+                <div class="hero-text">
+                  <p id="systemBadge" class="state-label">Waiting for device</p>
+                  <h1 id="systemHeading">Connecting to your protector</h1>
+                  <p id="systemDetail" class="hero-detail">
+                    Start Wokwi and keep this page open. Live measurements will appear automatically.
+                  </p>
+                </div>
               </div>
-              <div class="hero-text">
-                <p id="systemBadge" class="state-label">Waiting for device</p>
-                <h1 id="systemHeading">Connecting to your protector</h1>
-                <p id="systemDetail" class="hero-detail">
-                  Start Wokwi and keep this page open. Live measurements will appear automatically.
-                </p>
+              <div class="hero-action">
+                <button id="resetButton" class="primary-button" type="button">Safe reset</button>
+                <p id="commandFeedback" class="feedback">No command sent.</p>
               </div>
-            </div>
-            <div class="hero-action">
-              <button id="resetButton" class="primary-button" type="button">Request safe reset</button>
-              <p id="commandFeedback" class="feedback">No command sent.</p>
-            </div>
-          </section>
+            </section>
 
-          <section class="readings" aria-label="Live measurements">
-            <article class="reading-card">
+            <article class="reading-card voltage-card">
               <div class="reading-top">
                 <span>Voltage</span>
-                <i id="voltageDot" class="health-dot"></i>
+                <i id="voltageDot" class="health-dot" aria-hidden="true"></i>
               </div>
               <p><strong id="voltageValue"></strong><span>V</span></p>
               <small id="voltageHint">Healthy range 190–250 V</small>
             </article>
 
-            <article class="reading-card">
+            <article class="reading-card current-card">
               <div class="reading-top">
                 <span>Current</span>
-                <i id="currentDot" class="health-dot"></i>
+                <i id="currentDot" class="health-dot" aria-hidden="true"></i>
               </div>
               <p><strong id="currentValue"></strong><span>A</span></p>
               <small id="currentHint">Limit 5.0 A</small>
@@ -78,13 +78,52 @@
               <div class="load-visual" aria-hidden="true">
                 <span class="relay-box">Relay</span>
                 <span class="relay-line"></span>
-                <span class="lamp">●</span>
+                <span class="lamp"></span>
               </div>
               <small id="lastPacketValue">No telemetry received</small>
             </article>
-          </section>
 
-          <div class="dashboard-bottom-row">
+            <section id="indicatorPanel" class="simple-card indicator-card" aria-labelledby="indicatorHeading">
+              <div class="section-heading indicator-heading">
+                <div>
+                  <p class="section-kicker">Device panel</p>
+                  <h2 id="indicatorHeading">State indicators</h2>
+                </div>
+                <span id="indicatorSummary" class="soft-badge">No data</span>
+              </div>
+
+              <div class="indicator-controls">
+                <div class="led-grid" aria-label="Physical LED states">
+                  <div id="faultIndicator" class="led-item led-red">
+                    <span class="led" aria-hidden="true"></span>
+                    <span><strong>Fault</strong><small id="faultIndicatorState">Off</small></span>
+                  </div>
+                  <div id="loadIndicator" class="led-item led-green">
+                    <span class="led" aria-hidden="true"></span>
+                    <span><strong>Load</strong><small id="loadIndicatorState">Off</small></span>
+                  </div>
+                  <div id="powerIndicator" class="led-item led-blue">
+                    <span class="led" aria-hidden="true"></span>
+                    <span><strong>System</strong><small id="powerIndicatorState">Off</small></span>
+                  </div>
+                  <div id="resetIndicator" class="led-item led-yellow">
+                    <span class="led" aria-hidden="true"></span>
+                    <span><strong>Reset</strong><small id="resetIndicatorState">Off</small></span>
+                  </div>
+                </div>
+
+                <div class="power-control">
+                  <button id="systemPowerButton" class="power-pushbutton" type="button" aria-label="Toggle system power" aria-pressed="false" disabled>
+                    <span class="power-glyph" aria-hidden="true"></span>
+                  </button>
+                  <div>
+                    <strong>Power button</strong>
+                    <small id="powerButtonState">Waiting for device</small>
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <section class="simple-card settings-card" aria-labelledby="settingsHeading">
               <div class="section-heading">
                 <div>
@@ -114,22 +153,17 @@
                   </label>
                   <label>
                     <span>Reconnect delay</span>
-                    <div><input id="delayInput" type="number" min="0" max="120" step="0.1" value="3" required /><small>sec</small></div>
+                    <div><input id="delayInput" type="number" min="0" max="120" step="0.1" value="3" required /><small>s</small></div>
                   </label>
                 </div>
-                <p id="formError" class="form-error" role="alert"></p>
-                <button class="secondary-button" type="submit">Save settings to device</button>
+                <div class="settings-actions">
+                  <p id="formError" class="form-error" role="alert"></p>
+                  <button class="secondary-button" type="submit">Save to device</button>
+                </div>
               </form>
             </section>
-
-            <details class="simple-card activity-card">
-              <summary>Recent activity <span>View</span></summary>
-              <ol id="eventLog" aria-live="polite">
-                <li><time>—</time><span>Dashboard ready.</span></li>
-              </ol>
-              <button id="clearLogButton" class="text-button" type="button">Clear activity</button>
-            </details>
           </div>
+
         </main>
       </div>
 
@@ -167,6 +201,14 @@
         </div>
         <p class="chart-note">These are RMS measurement trends from the ESP32, not raw 50 Hz AC waveforms.</p>
       </section>
+
+      <details class="simple-card activity-card">
+        <summary>Recent activity <span>View log</span></summary>
+        <ol id="eventLog" aria-live="polite">
+          <li><time>—</time><span>Dashboard ready.</span></li>
+        </ol>
+        <button id="clearLogButton" class="text-button" type="button">Clear activity</button>
+      </details>
 
       <footer>
         <span>Voltage Protector by Md Mahmud Akon · Simulation and low-voltage testing only.</span>

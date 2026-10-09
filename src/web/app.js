@@ -23,6 +23,10 @@
     "systemHeading", "systemDetail", "resetButton", "commandFeedback",
     "voltageValue", "currentValue", "voltageHint", "currentHint",
     "voltageDot", "currentDot", "loadCard", "loadValue", "lastPacketValue",
+    "indicatorPanel", "indicatorSummary", "faultIndicator", "loadIndicator",
+    "powerIndicator", "resetIndicator", "faultIndicatorState",
+    "loadIndicatorState", "powerIndicatorState", "resetIndicatorState",
+    "systemPowerButton", "powerButtonState",
     "voltageChart", "currentChart", "chartVoltageValue", "chartCurrentValue",
     "settingsSource", "settingsForm", "vMinInput", "vMaxInput", "iMaxInput",
     "surgeInput", "delayInput", "formError", "eventLog", "clearLogButton",
@@ -56,6 +60,7 @@
     elements.connectionPill.className = `connection-pill ${mode}`;
     elements.connectionText.textContent = text;
     elements.connectButton.textContent = state.client ? "Disconnect" : "Connect";
+    renderPowerControl();
   }
 
   function connect() {
@@ -128,18 +133,20 @@
     const latchedFault = String(data.latched_fault ?? data.fault ?? "NONE");
     const faultLatched = Boolean(data.fault_latched ?? (latchedFault !== "NONE" && latchedFault !== "NORMAL"));
     const resetRequired = Boolean(data.reset_required ?? (activeFault === "NORMAL" && faultLatched));
+    const systemOn = data.system_on === undefined ? true : Boolean(data.system_on);
 
     state.telemetry = {
       voltage,
       current,
       loadOn: Boolean(data.load_on),
+      systemOn,
       activeFault,
       latchedFault,
       faultLatched,
       resetRequired,
     };
     state.telemetryAt = Date.now();
-    state.history.push({ at: state.telemetryAt, voltage, current });
+    if (systemOn) state.history.push({ at: state.telemetryAt, voltage, current });
     state.history = state.history.filter((sample) => sample.at >= state.telemetryAt - HISTORY_WINDOW_MS);
     renderTelemetry();
     drawCharts();
@@ -149,20 +156,27 @@
     const data = state.telemetry;
     if (!data) return;
 
-    elements.voltageValue.textContent = data.voltage.toFixed(1);
-    elements.currentValue.textContent = data.current.toFixed(2);
+    elements.voltageValue.textContent = data.systemOn ? data.voltage.toFixed(1) : "—";
+    elements.currentValue.textContent = data.systemOn ? data.current.toFixed(2) : "—";
     elements.chartVoltageValue.textContent = data.voltage.toFixed(1);
     elements.chartCurrentValue.textContent = data.current.toFixed(2);
-    elements.voltageHint.textContent = `Healthy range ${state.settings.v_min.toFixed(1)}–${state.settings.v_max.toFixed(1)} V`;
-    elements.currentHint.textContent = `Limit ${state.settings.i_max.toFixed(1)} A`;
-    elements.voltageDot.className = `health-dot ${data.voltage >= state.settings.v_min && data.voltage <= state.settings.v_max ? "healthy" : "unhealthy"}`;
-    elements.currentDot.className = `health-dot ${data.current <= state.settings.i_max ? "healthy" : "unhealthy"}`;
+    elements.voltageHint.textContent = data.systemOn ? `Healthy range ${state.settings.v_min.toFixed(1)}–${state.settings.v_max.toFixed(1)} V` : "System is off";
+    elements.currentHint.textContent = data.systemOn ? `Limit ${state.settings.i_max.toFixed(1)} A` : "System is off";
+    elements.voltageDot.className = `health-dot${data.systemOn ? ` ${data.voltage >= state.settings.v_min && data.voltage <= state.settings.v_max ? "healthy" : "unhealthy"}` : ""}`;
+    elements.currentDot.className = `health-dot${data.systemOn ? ` ${data.current <= state.settings.i_max ? "healthy" : "unhealthy"}` : ""}`;
     elements.loadValue.textContent = data.loadOn ? "Connected" : "Disconnected";
     elements.loadCard.classList.toggle("load-on", data.loadOn);
     elements.lastPacketValue.textContent = "Updated just now";
+    renderIndicators();
 
     elements.systemCard.className = "hero-card";
-    if (data.activeFault !== "NORMAL") {
+    if (!data.systemOn) {
+      elements.systemCard.classList.add("state-off");
+      elements.stateIcon.textContent = "○";
+      elements.systemBadge.textContent = "System off";
+      elements.systemHeading.textContent = "Protection is in standby";
+      elements.systemDetail.textContent = "The relay and load are off. Press the blue power button to start the protection system.";
+    } else if (data.activeFault !== "NORMAL") {
       elements.systemCard.classList.add("state-fault");
       elements.stateIcon.textContent = "!";
       elements.systemBadge.textContent = "Fault active";
@@ -187,6 +201,42 @@
       elements.systemHeading.textContent = "Load is disconnected";
       elements.systemDetail.textContent = "Measurements are normal. Request a safe reset to reconnect the load.";
     }
+  }
+
+  function setIndicator(item, stateLabel, isOn) {
+    item.classList.toggle("is-on", isOn);
+    stateLabel.textContent = isOn ? "On" : "Off";
+  }
+
+  function renderIndicators() {
+    const data = state.telemetry;
+    if (!data) return;
+
+    const faultOn = data.systemOn && data.activeFault !== "NORMAL";
+    const loadOn = data.systemOn && data.loadOn;
+    const resetOn = data.systemOn && data.resetRequired;
+
+    setIndicator(elements.faultIndicator, elements.faultIndicatorState, faultOn);
+    setIndicator(elements.loadIndicator, elements.loadIndicatorState, loadOn);
+    setIndicator(elements.powerIndicator, elements.powerIndicatorState, data.systemOn);
+    setIndicator(elements.resetIndicator, elements.resetIndicatorState, resetOn);
+    elements.indicatorPanel.classList.remove("is-stale");
+    elements.indicatorSummary.textContent = faultOn ? "Fault active" : resetOn ? "Reset required" : loadOn ? "Load protected" : data.systemOn ? "System on" : "System off";
+    renderPowerControl();
+  }
+
+  function renderPowerControl() {
+    const hasFreshTelemetry = state.telemetry && Date.now() - state.telemetryAt <= 7000;
+    const connected = Boolean(state.client?.connected);
+    const systemOn = Boolean(state.telemetry?.systemOn);
+    elements.systemPowerButton.disabled = !connected || !hasFreshTelemetry;
+    elements.resetButton.disabled = !connected || !hasFreshTelemetry || !systemOn || !state.telemetry?.resetRequired || state.telemetry?.activeFault !== "NORMAL";
+    elements.systemPowerButton.setAttribute("aria-pressed", String(systemOn));
+    elements.powerButtonState.textContent = !connected
+      ? "Connect first"
+      : !hasFreshTelemetry
+        ? "Waiting for device"
+        : systemOn ? "Press to turn off" : "Press to turn on";
   }
 
   function updateSettings(data) {
@@ -324,7 +374,16 @@
       elements.systemBadge.textContent = "No recent data";
       elements.systemHeading.textContent = "Device connection lost";
       elements.systemDetail.textContent = "The last values are shown below, but they may no longer be current.";
+      elements.indicatorPanel.classList.add("is-stale");
+      elements.indicatorSummary.textContent = "Data unavailable";
+      [
+        elements.faultIndicatorState,
+        elements.loadIndicatorState,
+        elements.powerIndicatorState,
+        elements.resetIndicatorState,
+      ].forEach((label) => { label.textContent = "Unknown"; });
     }
+    renderPowerControl();
   }
 
   function drawCharts(now = Date.now()) {
@@ -460,6 +519,7 @@
   elements.connectionForm.addEventListener("submit", saveConnection);
   elements.settingsForm.addEventListener("submit", saveSettings);
   elements.resetButton.addEventListener("click", () => publish({ action: "reset" }, "Safe reset request"));
+  elements.systemPowerButton.addEventListener("click", () => publish({ action: "power_toggle" }, "Power button command"));
   elements.clearLogButton.addEventListener("click", () => {
     elements.eventLog.innerHTML = "";
     addLog("Activity cleared.");

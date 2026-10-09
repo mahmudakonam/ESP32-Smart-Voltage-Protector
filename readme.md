@@ -50,7 +50,9 @@ ESP32 stops communicating when the simulation is stopped or the tab is closed.
 
 ## Controls
 
-- **Blue POWER button** or keyboard `P`: toggle the simulated system ON/OFF.
+- **Blue POWER button**, keyboard `P`, or dashboard power control: toggle the
+  simulated protection system ON/OFF. MQTT remains available in standby so the
+  dashboard can turn the simulated system on again.
 - **Voltage sensor emulator:** adjust the processed measurement from 150 to
   300 V RMS.
 - **Current sensor emulator:** adjust the processed measurement from 0 to

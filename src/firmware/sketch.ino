@@ -108,6 +108,7 @@ bool resetRequested = false;
 bool faultLatched = true;
 bool systemOn = true;
 bool powerButtonWasPressed = false;
+bool remotePowerToggleRequested = false;
 
 unsigned long healthySince = 0;
 unsigned long lastSample = 0;
@@ -302,6 +303,12 @@ bool applySettings(Settings next, String source) {
 }
 
 bool requestReset() {
+  if (!systemOn) {
+    resetRequested = false;
+    Serial.println("RESET REJECTED: SYSTEM OFF");
+    return false;
+  }
+
   if (activeFault != NO_FAULT) {
     resetRequested = false;
     healthySince = 0;
@@ -348,6 +355,11 @@ void mqttCallback(
       accepted,
       accepted ? "mqtt-reset" : "mqtt-reset-rejected"
     );
+    return;
+  }
+
+  if (action == "power_toggle") {
+    remotePowerToggleRequested = true;
     return;
   }
 
@@ -883,8 +895,8 @@ void setup() {
 void loop() {
   unsigned long now = millis();
 
-  // The Wokwi pushbutton toggles simulated master power. A real product would
-  // place a latching switch in series with the isolated low-voltage input.
+  // The Wokwi and dashboard buttons toggle the simulated protection system.
+  // MQTT remains powered in standby so a remote computer can turn it on again.
   bool powerButtonPressed =
     digitalRead(SYSTEM_POWER_BUTTON_PIN) == LOW;
   bool togglePower =
@@ -895,18 +907,18 @@ void loop() {
   powerButtonWasPressed = powerButtonPressed;
 
   bool requestedPower = systemOn;
-  if (togglePower) {
+  if (togglePower || remotePowerToggleRequested) {
     requestedPower = !systemOn;
     lastPowerToggle = now;
+    remotePowerToggleRequested = false;
   }
 
   if (requestedPower != systemOn) {
     systemOn = requestedPower;
 
     if (!systemOn) {
-      // Publish the transition before disabling network activity.
+      // Keep the MQTT control plane alive while protection outputs are off.
       publishEvent("SYSTEM OFF");
-      mqtt.loop();
 
       relayOn = false;
       activeFault = NO_FAULT;
@@ -925,9 +937,6 @@ void loop() {
       display.clearDisplay();
       display.display();
 
-      mqtt.disconnect();
-      WiFi.disconnect(true);
-      WiFi.mode(WIFI_OFF);
       Serial.println("SYSTEM POWER: OFF");
     } else {
       fault = STARTUP;
@@ -940,16 +949,26 @@ void loop() {
       digitalWrite(POWER_LED, HIGH);
       digitalWrite(RECONNECT_LED, HIGH);
 
-      WiFi.mode(WIFI_STA);
-      WiFi.begin(ssid, password);
-      lastWifiAttempt = now;
+      if (WiFi.status() != WL_CONNECTED) {
+        WiFi.mode(WIFI_STA);
+        WiFi.begin(ssid, password);
+        lastWifiAttempt = now;
+      }
 
       readSensors();
+      publishEvent("SYSTEM ON");
       Serial.println("SYSTEM POWER: ON");
     }
   }
 
   if (!systemOn) {
+    maintainMQTT();
+
+    if (now - lastTelemetry >= 1500) {
+      lastTelemetry = now;
+      publishTelemetry();
+    }
+
     delay(20);
     return;
   }
