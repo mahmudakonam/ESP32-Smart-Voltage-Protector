@@ -11,10 +11,13 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <a class="brand" href="#" aria-label="Voltage Protector home">
-          <span class="brand-icon" aria-hidden="true">⌁</span>
-          <span>Voltage Protector</span>
-        </a>
+        <div class="brand">
+          <a class="brand-link" href="https://mahmudakonam.github.io/ESP32-Smart-Voltage-Protector/" aria-label="Voltage Protector home">
+            <span class="brand-icon" aria-hidden="true">⌁</span>
+            <span>Voltage Protector</span>
+          </a>
+          <span class="brand-by">by Md Mahmud Akon</span>
+        </div>
         <div class="top-actions">
           <span id="connectionPill" class="connection-pill">
             <i id="connectionDot"></i>
@@ -26,7 +29,8 @@
       </header>
 
       <main>
-        <section id="systemCard" class="hero-card state-waiting" aria-live="polite">
+        <div class="dashboard-overview">
+          <section id="systemCard" class="hero-card state-waiting" aria-live="polite">
           <div class="state-symbol" aria-hidden="true">
             <span id="stateIcon">···</span>
           </div>
@@ -37,9 +41,9 @@
           </p>
           <button id="resetButton" class="primary-button" type="button">Request safe reset</button>
           <p id="commandFeedback" class="feedback">No command sent.</p>
-        </section>
+          </section>
 
-        <section class="readings" aria-label="Live measurements">
+          <section class="readings" aria-label="Live measurements">
           <article class="reading-card">
             <div class="reading-top">
               <span>Voltage</span>
@@ -70,7 +74,53 @@
             </div>
             <small id="lastPacketValue">No telemetry received</small>
           </article>
-        </section>
+          </section>
+
+          <section class="simple-card settings-card" aria-labelledby="settingsHeading">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">Remote settings</p>
+              <h2 id="settingsHeading">Protection limits</h2>
+            </div>
+            <span id="settingsSource" class="soft-badge">Defaults</span>
+          </div>
+
+          <form id="settingsForm" novalidate>
+            <div class="fields">
+              <label>
+                <span>Minimum voltage</span>
+                <div><input id="vMinInput" type="number" min="160" max="230" step="0.1" value="190" required /><small>V</small></div>
+              </label>
+              <label>
+                <span>Maximum voltage</span>
+                <div><input id="vMaxInput" type="number" min="230" max="280" step="0.1" value="250" required /><small>V</small></div>
+              </label>
+              <label>
+                <span>Maximum current</span>
+                <div><input id="iMaxInput" type="number" min="0.5" max="10" step="0.1" value="5" required /><small>A</small></div>
+              </label>
+              <label>
+                <span>Surge rise</span>
+                <div><input id="surgeInput" type="number" min="5" max="100" step="0.1" value="25" required /><small>V</small></div>
+              </label>
+              <label>
+                <span>Reconnect delay</span>
+                <div><input id="delayInput" type="number" min="0" max="120" step="0.1" value="3" required /><small>sec</small></div>
+              </label>
+            </div>
+            <p id="formError" class="form-error" role="alert"></p>
+            <button class="secondary-button" type="submit">Save settings to device</button>
+          </form>
+          </section>
+
+          <details class="simple-card activity-card">
+            <summary>Recent activity <span>View</span></summary>
+            <ol id="eventLog" aria-live="polite">
+              <li><time>—</time><span>Dashboard ready.</span></li>
+            </ol>
+            <button id="clearLogButton" class="text-button" type="button">Clear activity</button>
+          </details>
+        </div>
 
         <section class="simple-card charts-card" aria-labelledby="historyHeading">
           <div class="section-heading chart-heading">
@@ -106,55 +156,10 @@
           </div>
           <p class="chart-note">These are RMS measurement trends from the ESP32, not raw 50 Hz AC waveforms.</p>
         </section>
-
-        <section class="simple-card settings-card" aria-labelledby="settingsHeading">
-          <div class="section-heading">
-            <div>
-              <p class="section-kicker">Remote settings</p>
-              <h2 id="settingsHeading">Protection limits</h2>
-            </div>
-            <span id="settingsSource" class="soft-badge">Defaults</span>
-          </div>
-
-          <form id="settingsForm" novalidate>
-            <div class="fields">
-              <label>
-                <span>Minimum voltage</span>
-                <div><input id="vMinInput" type="number" min="160" max="230" step="0.1" value="190" required /><small>V</small></div>
-              </label>
-              <label>
-                <span>Maximum voltage</span>
-                <div><input id="vMaxInput" type="number" min="230" max="280" step="0.1" value="250" required /><small>V</small></div>
-              </label>
-              <label>
-                <span>Maximum current</span>
-                <div><input id="iMaxInput" type="number" min="0.5" max="10" step="0.1" value="5" required /><small>A</small></div>
-              </label>
-              <label>
-                <span>Surge rise</span>
-                <div><input id="surgeInput" type="number" min="5" max="100" step="0.1" value="25" required /><small>V</small></div>
-              </label>
-              <label>
-                <span>Reconnect delay</span>
-                <div><input id="delayInput" type="number" min="0" max="120" step="0.1" value="3" required /><small>sec</small></div>
-              </label>
-            </div>
-            <p id="formError" class="form-error" role="alert"></p>
-            <button class="secondary-button" type="submit">Save settings to device</button>
-          </form>
-        </section>
-
-        <details class="simple-card activity-card">
-          <summary>Recent activity <span>View</span></summary>
-          <ol id="eventLog" aria-live="polite">
-            <li><time>—</time><span>Dashboard ready.</span></li>
-          </ol>
-          <button id="clearLogButton" class="text-button" type="button">Clear activity</button>
-        </details>
       </main>
 
       <footer>
-        <span>Simulation and low-voltage testing only.</span>
+        <span>Voltage Protector by Md Mahmud Akon · Simulation and low-voltage testing only.</span>
         <span id="topicFooter">fsmb/protector/demo72619</span>
       </footer>
     </div>
