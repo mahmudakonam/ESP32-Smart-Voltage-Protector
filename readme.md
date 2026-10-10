@@ -2,7 +2,7 @@
 
 **Developed by Md Mahmud Akon**
 
-**Email: mahmudakon.eee.buet@gmail.com **
+Email: mahmudakon.eee.buet@gmail.com 
 
 This project is an ESP32-based voltage protector simulated in Wokwi. It
 monitors voltage and current, disconnects the load during a fault, and requires
