@@ -18,7 +18,7 @@ ESP32-Smart-Voltage-Protector/
 ├── src/
 │   ├── firmware/sketch.ino       # ESP32 firmware source
 │   └── web/                      # Remote MQTT dashboard
-├── design_document.md            # Editable one-page report draft
+├── design_document.md            # One-page report source
 ├── schematics/                   # Product block diagram and design notes
 ├── test_evidence/                # Build results and test checklist
 ├── project_files/wokwi/          # Wokwi simulation files
@@ -114,5 +114,5 @@ figures.
 
 - `schematics/README.md` contains the product-level block diagram.
 - `test_evidence/README.md` records the successful build and completed tests.
-- `design_document.md` is the editable report draft. The final report must fit
-  on one page and be exported as `design_document.pdf`.
+- `design_document.md` is the one-page report source. Export it as
+  `design_document.pdf` for the final submission.

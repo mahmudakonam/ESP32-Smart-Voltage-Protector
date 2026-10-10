@@ -1,61 +1,49 @@
-# ESP32 Smart Voltage Protector — Design Document Draft
+# ESP32 Smart Voltage Protector
 
-**Author:** Mahmud Akon<br>
-**Assessment:** FSMB Recruitment 2026 — Embedded System Engineer, Phase 1<br>
-**Final deliverable:** Update this draft, keep it within one page, and export it
-as `design_document.pdf` in the repository root.
-
-## Objective
-
-The project protects a simulated electrical appliance from under-voltage,
-over-voltage, excessive current, and a sudden voltage rise. When an unsafe
-condition is detected, an ESP32 immediately opens a relay and keeps the load
-disconnected. The project follows the assessment safety notice by representing
-the grid and appliance with low-voltage Wokwi components rather than mains
-hardware.
+**Md Mahmud Akon**<br>
+FSMB Recruitment 2026 — Embedded System Engineer, Phase 1
 
 ## Design approach
 
-Two adjustable sensor-emulator blocks represent conditioned voltage and current
-measurements. They use a separate labelled 3.3 V sensor rail and deliver only
-0–3.3 V ADC signals to ESP32 pins GPIO34 and GPIO35. Firmware converts the ADC
-values to 150–300 V RMS and 0–10 A RMS. The ESP32 compares each sample with
-configurable minimum-voltage, maximum-voltage, maximum-current, and
-voltage-rise limits.
+I built an ESP32-based device that disconnects an appliance during unsafe
+voltage or current conditions. I developed the protection and relay control
+first, added the local interface, and then added MQTT and the web dashboard.
+The complete project was tested in Wokwi.
 
-The protection controller is a latched state machine. An active fault opens the
-relay, turns on the red LED, sounds the buzzer, and turns off the green load
-lamp. When measurements become normal, the active alarm clears but the relay
-remains open and a yellow indicator requests manual reconnection. Pressing `D`
-or sending a safe-reset request from the dashboard starts a healthy delay. The
-relay closes only if the measurements remain safe throughout that delay.
+Wokwi does not provide a real AC grid or the exact sensors needed here, so I
+used two potentiometers as sensor emulators. They represent conditioned 0–3.3 V
+outputs from isolated voltage and current sensors. The firmware converts them
+to 150–300 V RMS and 0–10 A RMS. A relay module represents the contactor, and a
+green LED represents the protected appliance.
 
-## User interface and communication
+## Operation and control
 
-A 4×4 keypad allows the user to change protection limits and request a manual
-reset. A 128×64 OLED shows voltage, current, load state, fault state, and MQTT
-status. Separate red, yellow, green, and blue indicators show active fault,
-reset required, protected load connected, and system power respectively.
+The ESP32 continuously checks minimum voltage, maximum voltage, maximum
+current, and sudden voltage rise. If a limit is crossed, the relay opens, the
+green load LED turns off, and the red fault LED and buzzer turn on.
 
-The simulated ESP32 connects to `Wokwi-GUEST` and publishes telemetry and event
-messages through MQTT. A responsive browser dashboard displays current values,
-60-second RMS trends, relay state, fault history, and configurable limits. The
-local protection algorithm does not depend on the network and continues to
-operate if MQTT is unavailable.
+When the readings return to normal, the relay remains open and the yellow LED
+asks for a manual reset. A reset is rejected while a fault is active. After a
+valid reset, the readings must stay healthy for three seconds before the relay
+closes. I chose this method because reconnecting after only one normal reading
+could be unsafe.
 
-## Verification and limitations
+A keypad and OLED provide local settings and status. Invalid settings are
+rejected, while accepted settings are stored in ESP32 flash memory. The MQTT
+dashboard shows live values, relay state, graphs, and recent activity. It can
+also update settings and request a safe reset. Protection runs locally, so an
+MQTT failure does not stop the ESP32 from opening the relay.
 
-The firmware builds successfully for ESP32, using 980,375 bytes of program
-storage and 49,148 bytes of dynamic memory. Planned evidence covers startup,
-healthy reconnection, every fault type, unsafe reset rejection, keypad and
-remote configuration, MQTT loss, and master power cycling.
+## Results and limitations
 
-Wokwi potentiometers provide convenient sensor-output controls but do not model
-the analog isolation, filtering, RMS conversion, contact ratings, or electrical
-clearances required by a real mains product. Real hardware would require an
-isolated supply, isolated voltage/current sensing, ADC protection, fusing, and
-a correctly rated contactor and driver.
+I manually tested normal operation, over-voltage, under-voltage, over-current,
+sudden rise, fault recovery, unsafe reset, local and remote settings, system
+power, and MQTT failure. The relay, indicators, OLED, Serial Monitor, and
+dashboard showed the expected states. The firmware also compiled successfully
+for the ESP32.
 
-**Before exporting:** add final screenshots/results, confirm measured trip and
-reconnect timing, remove this instruction, and revise the wording in your own
-voice.
+This is a simulation, not a mains-ready product. The potentiometers do not
+model real sensor noise or isolation, and the public MQTT broker is only for a
+demonstration. Real hardware would need isolated sensing, fusing, ADC
+protection, safe clearances, and a correctly rated relay or contactor. The
+tests were manual, so automated testing would be a useful future improvement.
