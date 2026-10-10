@@ -98,6 +98,23 @@ The public broker requires no account and is appropriate only for a short
 demonstration. Do not publish private information or production commands on it.
 Local protection continues to operate if MQTT is unavailable.
 
+## Selected test evidence
+
+Normal operation with the protected load connected:
+
+![Wokwi normal operation](test_evidence/figures/01_normal_operation_load_on.png)
+
+Over-voltage fault with the relay and protected load disconnected:
+
+![Wokwi over-voltage trip](test_evidence/figures/03_overvoltage_fault_trip.png)
+
+Remote dashboard showing the state indicators and voltage/current history:
+
+![Web dashboard fault history](test_evidence/figures/08_web_dashboard_fault_history.png)
+
+See the [test evidence checklist](test_evidence/README.md) for all figures and
+remaining test cases.
+
 ## Evidence and report
 
 - `schematics/README.md` contains the product-level block diagram.
