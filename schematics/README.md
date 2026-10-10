@@ -13,31 +13,61 @@ protected appliance.
 
 ```mermaid
 flowchart LR
-    Grid[AC grid] --> Fuse[Input fuse and protection]
-    Fuse --> Contactor[Relay or contactor]
-    Contactor --> Current[Isolated current sensor]
-    Current --> Load[Protected appliance]
+    subgraph Mains["Mains side"]
+        Line[AC line] --> Fuse[Input fuse]
+        Fuse --> ProtectedLine[Protected line]
+        ProtectedLine --> Contact[Normally-open relay contact]
+        Contact --> CurrentSensor[Isolated current transducer]
+        CurrentSensor --> Appliance[Protected appliance]
+        Appliance --> Neutral[AC neutral]
 
-    Fuse --> Voltage[Isolated voltage sensor]
-    Voltage --> VSignal[Signal conditioning]
-    Current --> ISignal[Signal conditioning]
-    VSignal --> ESP[ESP32 controller]
-    ISignal --> ESP
+        ProtectedLine --> SurgeProtection[MOV or surge-protection device]
+        Neutral --> SurgeProtection
+        ProtectedLine --> VoltageSensor[Isolated voltage transducer]
+        Neutral --> VoltageSensor
+        ProtectedLine --> PowerSupply[Isolated AC-DC power supply]
+        Neutral --> PowerSupply
+    end
 
-    ESP --> Driver[Isolated relay driver]
-    Driver --> Contactor
-    Keypad[Keypad] --> ESP
-    ESP --> Display[OLED and status indicators]
-    ESP <--> MQTT[Wi-Fi and MQTT]
-    MQTT <--> Web[Web dashboard]
+    subgraph Control["Safe low-voltage control side"]
+        PowerSupply --> Rails[Regulated 5 V and 3.3 V rails]
 
-    Supply[Isolated low-voltage supply] --> ESP
-    Supply --> Voltage
-    Supply --> Current
+        VoltageSensor --> VoltageConditioning[Voltage RMS-to-DC and 0-3.3 V conditioning]
+        CurrentSensor --> CurrentConditioning[Current RMS-to-DC and 0-3.3 V conditioning]
+        VoltageConditioning -->|GPIO34 ADC| ESP[ESP32 protection controller]
+        CurrentConditioning -->|GPIO35 ADC| ESP
+
+        ESP -->|GPIO26| RelayDriver[Isolated relay driver]
+        Rails --> RelayDriver
+        RelayDriver --> Coil[Relay or contactor coil]
+        Coil -. Mechanical operation .-> Contact
+
+        PowerButton[System ON/OFF pushbutton] -->|GPIO4| ESP
+        Keypad[4 x 4 keypad] --> ESP
+        ESP <--> OLED[OLED display]
+        ESP --> Indicators[Red, yellow, green and blue indicators]
+        ESP --> Buzzer[Fault buzzer]
+
+        ESP <--> Network[Wi-Fi and MQTT]
+        Network <--> Dashboard[Remote web dashboard]
+
+        Rails --> ESP
+        Rails --> VoltageConditioning
+        Rails --> CurrentConditioning
+        Rails --> OLED
+    end
 ```
 
-Wokwi does not simulate a real AC grid or the internal isolation and
-conditioning circuits. In real hardware, the design would need suitable
-isolation, fuses, clearances, input protection, and a correctly rated
-relay/contactor. The simulated circuit must not be connected directly to mains
-voltage.
+The voltage sensor is connected before the relay and measures across line and
+neutral. This allows the controller to check the grid voltage while the load is
+disconnected. The current sensor is in series with the protected load.
+
+Only isolated, conditioned 0-3.3 V signals reach ESP32 GPIO34 and GPIO35. GPIO26
+controls the relay coil through a driver; the coil operates the mains contact
+mechanically. The blue pushbutton is a controller input, not a mains isolator.
+
+Wokwi replaces both sensing channels with potentiometers and replaces the
+appliance with a green LED. A real unit would require certified isolation,
+correct fuse and surge-protection ratings, safe creepage and clearance, ADC
+input protection, and a relay or contactor rated for the appliance. The
+simulated circuit must not be connected directly to mains voltage.
