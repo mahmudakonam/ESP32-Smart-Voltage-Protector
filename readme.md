@@ -5,8 +5,6 @@ load during under-voltage, over-voltage, over-current, sudden voltage-rise, or
 sensor faults. It provides local controls, an OLED display, relay/load
 indication, and remote computer monitoring over MQTT.
 
-> **Safety:** This is a Wokwi simulation and low-voltage design study. Do not
-> connect the circuit directly to mains voltage.
 
 ## Live links
 
@@ -21,17 +19,14 @@ ESP32-Smart-Voltage-Protector/
 │   ├── firmware/sketch.ino       # ESP32 firmware source
 │   └── web/                      # Remote MQTT dashboard
 ├── design_document.md            # Editable one-page report draft
-├── schematics/                    # Product block diagram and design notes
-├── test_evidence/                 # Build results and test checklist
-├── project_files/wokwi/           # Wokwi simulation files
+├── schematics/                   # Product block diagram and design notes
+├── test_evidence/                # Build results and test checklist
+├── project_files/wokwi/          # Wokwi simulation files
 │   ├── diagram.json
 │   ├── sketch.ino
 │   └── libraries.txt
-└── readme.md                      # Project instructions
+└── readme.md                     # Project instructions
 ```
-
-Before the final assessment submission, update `design_document.md` and export
-it as the required root-level file named `design_document.pdf`.
 
 ## Run online
 
