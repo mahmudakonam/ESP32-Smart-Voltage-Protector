@@ -1,40 +1,43 @@
-# Product block diagram
+# Schematics
+
+## Wokwi simulation
+
+![Wokwi wiring diagram](system_wiring_diagram.png)
+
+The two potentiometers imitate the conditioned outputs of voltage and current
+sensors. The ESP32 reads these signals, controls the relay, and updates the
+OLED, LEDs, buzzer, keypad, and web dashboard. The green LED represents the
+protected appliance.
+
+## Real-product block diagram
 
 ```mermaid
 flowchart LR
-    USB[Isolated USB / 5 V supply] --> Master[Master power switch]
-    Master --> LogicRail[Controller 5 V / 3.3 V rail]
-    Master --> SensorRail[Separate regulated 3.3 V sensor rail]
-    LogicRail --> ESP[ESP32 controller]
-    Grid[Low-voltage grid stand-in] --> SensorV[Isolated voltage sensor / conditioner]
-    LoadLine[Low-voltage load stand-in] --> SensorI[Current sensor / conditioner]
-    SensorRail --> SensorV
-    SensorRail --> SensorI
-    SensorV -->|Conditioned 0-3.3 V output| ADC[ESP32 ADC]
-    SensorI -->|Conditioned 0-3.3 V output| ADC
-    SensorV --- AGND[Common ADC reference ground]
-    SensorI --- AGND
-    AGND --- ESP
-    ESP --> FSM[Protection state machine]
-    ADC --> FSM
-    Keypad[4 × 4 keypad] --> FSM
-    FSM --> OLED[OLED status display]
-    FSM --> Alarm[Fault LED and buzzer]
-    FSM --> Reconnect[Yellow manual-reconnect LED]
-    FSM --> Driver[Isolated relay driver]
-    Driver --> Contactor[Load contactor / relay]
-    Contactor --> Load[Green protected lamp/load]
-    FSM <--> MQTT[Wi-Fi + MQTT]
-    MQTT <--> Browser[Remote web dashboard]
+    Grid[AC grid] --> Fuse[Input fuse and protection]
+    Fuse --> Contactor[Relay or contactor]
+    Contactor --> Current[Isolated current sensor]
+    Current --> Load[Protected appliance]
+
+    Fuse --> Voltage[Isolated voltage sensor]
+    Voltage --> VSignal[Signal conditioning]
+    Current --> ISignal[Signal conditioning]
+    VSignal --> ESP[ESP32 controller]
+    ISignal --> ESP
+
+    ESP --> Driver[Isolated relay driver]
+    Driver --> Contactor
+    Keypad[Keypad] --> ESP
+    ESP --> Display[OLED and status indicators]
+    ESP <--> MQTT[Wi-Fi and MQTT]
+    MQTT <--> Web[Web dashboard]
+
+    Supply[Isolated low-voltage supply] --> ESP
+    Supply --> Voltage
+    Supply --> Current
 ```
 
-The Wokwi knobs are presented as powered sensor-output emulators. They use a
-separate labelled 3.3 V sensor rail and provide conditioned ADC signals that the
-firmware converts to 150-300 V RMS and 0-10 A RMS. Their ground joins the ESP32
-ground only to provide the ADC reference. Wokwi does not simulate the internal
-isolation or analog conditioning circuitry.
-
-In real hardware, the master switch must disable both the controller and sensor
-rails. A real product would also require galvanic isolation, input fusing,
-correctly rated clearances, ADC over-voltage protection, and a properly rated
-relay/contactor driver.
+Wokwi does not simulate a real AC grid or the internal isolation and
+conditioning circuits. In real hardware, the design would need suitable
+isolation, fuses, clearances, input protection, and a correctly rated
+relay/contactor. The simulated circuit must not be connected directly to mains
+voltage.

@@ -107,13 +107,12 @@ Remote dashboard showing the state indicators and voltage/current history:
 
 ![Web dashboard fault history](test_evidence/figures/08_web_dashboard_fault_history.png)
 
-See the [test evidence checklist](test_evidence/README.md) for all figures and
-remaining test cases.
+See the [test evidence summary](test_evidence/README.md) for the complete set of
+figures.
 
 ## Evidence and report
 
 - `schematics/README.md` contains the product-level block diagram.
-- `test_evidence/README.md` records the successful firmware build and the test
-  cases that should be captured before submission.
-- `design_document.md` is an editable report draft. Replace its placeholders,
-  keep the final report within one page, and export it as `design_document.pdf`.
+- `test_evidence/README.md` records the successful build and completed tests.
+- `design_document.md` is the editable report draft. The final report must fit
+  on one page and be exported as `design_document.pdf`.
