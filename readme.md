@@ -1,6 +1,7 @@
 # ESP32 Smart Voltage Protector
 
 **Developed by Md Mahmud Akon**
+
 **Email: mahmudakon.eee.buet@gmail.com **
 
 This project is an ESP32-based voltage protector simulated in Wokwi. It
