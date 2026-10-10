@@ -202,12 +202,49 @@
         <p class="chart-note">These are RMS measurement trends from the ESP32, not raw 50 Hz AC waveforms.</p>
       </section>
 
-      <details class="simple-card activity-card">
-        <summary>Recent activity <span>View log</span></summary>
-        <ol id="eventLog" aria-live="polite">
-          <li><time>—</time><span>Dashboard ready.</span></li>
-        </ol>
-        <button id="clearLogButton" class="text-button" type="button">Clear activity</button>
+      <details id="activityCard" class="simple-card activity-card">
+        <summary class="activity-heading">
+          <div>
+            <p class="section-kicker">System record</p>
+            <h2 id="activityHeading">Recent activity</h2>
+            <p class="activity-description">Important device, protection, connection, and control events from this dashboard session.</p>
+          </div>
+          <span class="activity-summary-actions">
+            <span class="activity-count"><i aria-hidden="true"></i><span id="logCount">0 events</span></span>
+            <span class="view-log-toggle"><span class="when-closed">View log</span><span class="when-open">Hide log</span><i aria-hidden="true"></i></span>
+          </span>
+        </summary>
+
+        <div class="activity-expanded">
+          <div class="activity-toolbar" aria-label="Activity log controls">
+            <div class="log-filters" role="group" aria-label="Filter activity">
+              <button class="log-filter is-active" type="button" data-log-filter="all" aria-pressed="true">All</button>
+              <button class="log-filter" type="button" data-log-filter="safety" aria-pressed="false">Safety</button>
+              <button class="log-filter" type="button" data-log-filter="system" aria-pressed="false">System</button>
+              <button class="log-filter" type="button" data-log-filter="control" aria-pressed="false">Controls</button>
+              <button class="log-filter" type="button" data-log-filter="settings" aria-pressed="false">Settings</button>
+            </div>
+            <div class="log-actions">
+              <button id="downloadLogButton" class="text-button" type="button">Download CSV</button>
+              <button id="clearLogButton" class="text-button danger-text" type="button">Clear log</button>
+            </div>
+          </div>
+
+          <div class="activity-table-wrap" role="region" aria-label="Recent activity events" tabindex="0">
+            <table class="activity-table">
+              <thead>
+                <tr>
+                  <th scope="col">Time</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Activity</th>
+                  <th scope="col">Details</th>
+                </tr>
+              </thead>
+              <tbody id="eventLog" aria-live="polite"></tbody>
+            </table>
+            <p id="emptyLogMessage" class="empty-log" hidden>No events match this filter.</p>
+          </div>
+        </div>
       </details>
 
       <footer>
