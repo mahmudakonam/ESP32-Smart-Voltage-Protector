@@ -3,7 +3,7 @@
 An ESP32-based protection controller that disconnects a simulated electrical
 load during under-voltage, over-voltage, over-current, sudden voltage-rise, or
 sensor faults. It provides local controls, an OLED display, relay/load
-indication, and remote monitoring over MQTT.
+indication, and remote computer monitoring over MQTT.
 
 > **Safety:** This is a Wokwi simulation and low-voltage design study. Do not
 > connect the circuit directly to mains voltage.
